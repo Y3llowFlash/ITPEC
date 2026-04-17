@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>containsSubstring Visualizer</title>
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#151b31; --panel2:#1d2440; --text:#eef2ff; --muted:#aeb8da;
+      --accent:#7c9cff; --good:#4ade80; --warn:#f59e0b; --bad:#fb7185;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:Inter,system-ui,Segoe UI,Arial,sans-serif; color:var(--text);
+      background:linear-gradient(135deg,#09101d,#141a32 55%,#09101d);
+    }
+    .wrap{max-width:1380px;margin:0 auto;padding:24px}
+    h1{margin:0 0 8px;font-size:clamp(1.6rem,2vw,2.3rem)}
+    .lead{margin:0 0 20px;color:var(--muted);line-height:1.65}
+    .grid{display:grid;grid-template-columns:1.12fr 1fr;gap:20px}
+    .panel{
+      background:rgba(21,27,49,.92); border:1px solid rgba(255,255,255,.08); border-radius:18px;
+      padding:18px; box-shadow:0 12px 28px rgba(0,0,0,.28);
+    }
+    .arraySection{margin-bottom:18px}
+    .arrayTitle{margin:0 0 10px;font-size:1.05rem;color:#dbe4ff}
+    .arrayBox{
+      display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end; min-height:98px; padding:14px;
+      border-radius:16px; background:linear-gradient(180deg,#121932,#0f1528); border:1px solid rgba(255,255,255,.08);
+    }
+    .cellWrap{display:flex;flex-direction:column;align-items:center;gap:6px}
+    .index{color:#9fb0e8;font-size:.9rem;font-weight:700}
+    .cell{
+      min-width:58px;height:58px;border-radius:14px; display:flex;align-items:center;justify-content:center;
+      background:#263154;border:1px solid rgba(255,255,255,.08); font-size:1.3rem;font-weight:800;color:#fff;
+    }
+    .cell.window{background:#3b2f6e;border:2px solid #c4b5fd}
+    .cell.match{background:#173c2a;border:2px solid #4ade80}
+    .cell.mismatch{background:#4a1f2a;border:2px solid #fb7185}
+    .cell.focus{background:#5b3d12;border:2px solid #f8c15d;color:#fff4d7}
+    .controls{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+    button{
+      border:none;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer;
+      background:var(--accent);color:white;
+    }
+    button.secondary{background:#334155}
+    button.good{background:#4ade80;color:#08110a}
+    button.warn{background:#f59e0b;color:#241400}
+    button:disabled{opacity:.45;cursor:not-allowed}
+    .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+    .card{
+      background:var(--panel2);border-radius:16px;padding:14px; border:1px solid rgba(255,255,255,.06);min-height:104px;
+    }
+    .card h3{margin:0 0 10px;font-size:1rem;color:#dbe4ff}
+    .pillrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-height:36px}
+    .pill{
+      border-radius:999px;padding:8px 12px;background:#2b3358; border:1px solid rgba(255,255,255,.08);
+      font-weight:700;min-width:48px;text-align:center;
+    }
+    .pill.good{background:#173c2a}
+    .pill.warn{background:#5b3d12}
+    .pill.bad{background:#45212b}
+    .pill.focus{background:#3b2f6e}
+    .status{
+      margin-top:14px;padding:12px 14px;border-radius:14px;background:#11162a;
+      line-height:1.65;border-left:4px solid var(--accent);color:#e4eaff;
+    }
+    .codebox{
+      margin-top:12px;background:#0d1324;border-radius:14px;padding:14px; border:1px solid rgba(255,255,255,.06);
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; white-space:pre-wrap; line-height:1.65;color:#e3e9ff;
+    }
+    .choiceRow{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+    .choice{
+      padding:10px 12px;border-radius:12px;background:#212947; border:1px solid rgba(255,255,255,.06);font-weight:700;
+    }
+    .choice.right{background:#173c2a;border:1px solid rgba(74,222,128,.35)}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{border:1px solid rgba(255,255,255,.08);padding:8px 10px;text-align:left;vertical-align:top}
+    th{background:#252d4d}
+    tr.highlight td, tr.highlight th{background:#31406a;outline:2px solid #f8c15d}
+    .footer{margin-top:18px;color:var(--muted);line-height:1.65;font-size:.95rem}
+    .mini{color:var(--muted);margin-top:8px}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} .cards{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>containsSubstring Visualizer</h1>
+    <p class="lead">
+      This version explains why the correct answer is <b>e</b>. It shows how the algorithm slides a window over
+      <b>str</b> and compares it with <b>seq</b>. Since the question uses <b>1-based indexes</b>, the correct access is
+      <b>str[i + j - 1]</b>, and a full match ends with <b>j = seqlen + 1</b>.
+    </p>
+
+    <div class="grid">
+      <div class="panel">
+        <div class="arraySection">
+          <h2 class="arrayTitle">str = {"a", "p", "p", "l", "e"}</h2>
+          <div id="strBox" class="arrayBox"></div>
+        </div>
+
+        <div class="arraySection">
+          <h2 class="arrayTitle">seq = {"p", "l", "e"}</h2>
+          <div id="seqBox" class="arrayBox"></div>
+        </div>
+
+        <div class="controls">
+          <button id="prevBtn" class="secondary">◀ Previous</button>
+          <button id="nextBtn">Next ▶</button>
+          <button id="autoBtn" class="good">Auto Play</button>
+          <button id="resetBtn" class="warn">Reset</button>
+        </div>
+
+        <div class="mini">
+          Think of <b>i</b> as the starting position of the window in <b>str</b>, and <b>j</b> as the position inside <b>seq</b>.
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="cards">
+          <div class="card">
+            <h3>Variables</h3>
+            <div id="varBox" class="pillrow"></div>
+          </div>
+          <div class="card">
+            <h3>Current Check</h3>
+            <div id="checkBox" class="pillrow"></div>
+          </div>
+          <div class="card">
+            <h3>What Happened</h3>
+            <div id="actionBox" style="line-height:1.6"></div>
+          </div>
+          <div class="card">
+            <h3>Loop Outcome</h3>
+            <div id="outcomeBox" class="pillrow"></div>
+          </div>
+        </div>
+
+        <div class="status" id="statusBox"></div>
+        <div class="codebox" id="codeBox"></div>
+
+        <div class="choiceRow">
+          <div class="choice" id="choiceA">A: str[i + j - 1]</div>
+          <div class="choice" id="choiceB">B: j = seqlen + 1</div>
+        </div>
+
+        <table>
+          <thead>
+            <tr><th>Blank</th><th>Needed expression</th><th>Why</th></tr>
+          </thead>
+          <tbody>
+            <tr id="rowA">
+              <th>A</th>
+              <td><b>str[i + j - 1]</b></td>
+              <td>Because both <b>i</b> and <b>j</b> start at 1, and the first comparison must begin exactly at position <b>i</b>.</td>
+            </tr>
+            <tr id="rowB">
+              <th>B</th>
+              <td><b>j = seqlen + 1</b></td>
+              <td>After matching the last character, the loop increments <b>j</b> once more, so it ends one step past the end of <b>seq</b>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel footer">
+      <b>Why answer e is correct:</b><br>
+      Since indexes start at 1, the first comparison in a window beginning at <b>i</b> should be:
+      <br><code>str[i + 1 - 1] = str[i]</code>
+      <br>So A must be <b>str[i + j - 1]</b>.
+      <br><br>
+      And when all characters match, the loop does one last increment:
+      <br><code>j ← j + 1</code>
+      <br>so the success test becomes <b>j = seqlen + 1</b>.
+    </div>
+  </div>
+
+  <script>
+    const states = [
+      {
+        str:['a','p','p','l','e'], seq:['p','l','e'],
+        i:1, j:1, len:3, seqlen:3, strFocus:1, seqFocus:1,
+        strWindow:[1,2,3], strMatch:[], strMismatch:[1], seqMatch:[], seqMismatch:[1],
+        action:"Start with i = 1. The candidate window in str is positions 1 to 3: a, p, p.",
+        check:["compare str[1] with seq[1]"],
+        outcome:["mismatch"],
+        status:"At i = 1, the first character in the window does not match seq[1].",
+        code:"i = 1, j = 1\nCorrect A: str[i + j - 1]\n= str[1 + 1 - 1]\n= str[1]",
+        markA:true, markB:false
+      },
+      {
+        str:['a','p','p','l','e'], seq:['p','l','e'],
+        i:1, j:1, len:3, seqlen:3, strFocus:2, seqFocus:1,
+        strWindow:[1,2,3], strMatch:[], strMismatch:[2], seqMatch:[], seqMismatch:[1],
+        action:"If A were str[i + j], then at i = 1 and j = 1 it would point to str[2], which skips the true start of the window.",
+        check:["wrong: str[i + j] = str[2]"],
+        outcome:["wrong offset"],
+        status:"That is why A cannot be str[i + j]. It starts one step too far to the right.",
+        code:"Wrong A:\nstr[i + j]\n= str[1 + 1]\n= str[2]\n\nBut the first comparison should start at str[1].",
+        markA:true, markB:false
+      },
+      {
+        str:['a','p','p','l','e'], seq:['p','l','e'],
+        i:2, j:1, len:3, seqlen:3, strFocus:2, seqFocus:1,
+        strWindow:[2,3,4], strMatch:[2], strMismatch:[], seqMatch:[1], seqMismatch:[],
+        action:"Move to i = 2. Now the candidate window is positions 2 to 4: p, p, l.",
+        check:["str[i + j - 1] = str[2]", "seq[1] = p"],
+        outcome:["match"],
+        status:"The first characters match, so j increases.",
+        code:"i = 2, j = 1\nstr[2 + 1 - 1] = str[2] = 'p'\nseq[1] = 'p'\n\nMatch → j ← j + 1",
+        markA:true, markB:false
+      },
+      {
+        str:['a','p','p','l','e'], seq:['p','l','e'],
+        i:2, j:2, len:3, seqlen:3, strFocus:3, seqFocus:2,
+        strWindow:[2,3,4], strMatch:[2], strMismatch:[3], seqMatch:[1], seqMismatch:[2],
+        action:"Now j = 2, so compare the second character of seq with the second character of the window.",
+        check:["str[i + j - 1] = str[3]", "seq[2] = l"],
+        outcome:["mismatch"],
+        status:"Here p ≠ l, so the while loop breaks. Starting at i = 2 is not a full match.",
+        code:"i = 2, j = 2\nstr[2 + 2 - 1] = str[3] = 'p'\nseq[2] = 'l'\n\nMismatch → exit while",
+        markA:true, markB:false
+      },
+      {
+        str:['a','p','p','l','e'], seq:['p','l','e'],
+        i:3, j:1, len:3, seqlen:3, strFocus:3, seqFocus:1,
+        strWindow:[3,4,5], strMatch:[3], strMismatch:[], seqMatch:[1], seqMismatch:[],
+        action:"Now try i = 3. The window is positions 3 to 5: p, l, e.",
+        check:["str[i + j - 1] = str[3]", "seq[1] = p"],
+        outcome:["match"],
+        status:"Good start. First characters match.",
+        code:"i = 3, j = 1\nstr[3 + 1 - 1] = str[3] = 'p'\nseq[1] = 'p'\n\nMatch → j ← j + 1",
+        markA:true, markB:false
+      },
+      {
+        str:['a','p','p','l','e'], seq:['p','l','e'],
+        i:3, j:2, len:3, seqlen:3, strFocus:4, seqFocus:2,
+        strWindow:[3,4,5], strMatch:[3,4], strMismatch:[], seqMatch:[1,2], seqMismatch:[],
+        action:"Second comparison in the same window.",
+        check:["str[i + j - 1] = str[4]", "seq[2] = l"],
+        outcome:["match"],
+        status:"Still matching, so j increases again.",
+        code:"i = 3, j = 2\nstr[3 + 2 - 1] = str[4] = 'l'\nseq[2] = 'l'\n\nMatch → j ← j + 1",
+        markA:true, markB:false
+      },
+      {
+        str:['a','p','p','l','e'], seq:['p','l','e'],
+        i:3, j:3, len:3, seqlen:3, strFocus:5, seqFocus:3,
+        strWindow:[3,4,5], strMatch:[3,4,5], strMismatch:[], seqMatch:[1,2,3], seqMismatch:[],
+        action:"Third comparison in the same window.",
+        check:["str[i + j - 1] = str[5]", "seq[3] = e"],
+        outcome:["match"],
+        status:"All three characters matched.",
+        code:"i = 3, j = 3\nstr[3 + 3 - 1] = str[5] = 'e'\nseq[3] = 'e'\n\nMatch → j ← j + 1",
+        markA:true, markB:false
+      },
+      {
+        str:['a','p','p','l','e'], seq:['p','l','e'],
+        i:3, j:4, len:3, seqlen:3, strFocus:null, seqFocus:null,
+        strWindow:[3,4,5], strMatch:[3,4,5], strMismatch:[], seqMatch:[1,2,3], seqMismatch:[],
+        action:"After the third successful match, j increases one more time.",
+        check:["j became 4", "seqlen + 1 = 4"],
+        outcome:["full match"],
+        status:"This is the key to B. The while loop ends because j is now greater than seqlen.",
+        code:"After matching seq[3]:\nj ← j + 1\nj = 4\n\nSince seqlen = 3,\nj = seqlen + 1",
+        markA:false, markB:true
+      },
+      {
+        str:['a','p','p','l','e'], seq:['p','l','e'],
+        i:3, j:4, len:3, seqlen:3, strFocus:null, seqFocus:null,
+        strWindow:[3,4,5], strMatch:[3,4,5], strMismatch:[], seqMatch:[1,2,3], seqMismatch:[],
+        action:"The program now checks the post-loop condition.",
+        check:["if ( j = seqlen + 1 )"],
+        outcome:["return true"],
+        status:"Since j = 4 and seqlen + 1 = 4, the function returns true.",
+        code:"if ( B )\n    return true\n\nCorrect B:\nj = seqlen + 1",
+        markA:false, markB:true
+      },
+      {
+        str:['a','p','p','l','e'], seq:['p','l','e'],
+        i:3, j:4, len:3, seqlen:3, strFocus:null, seqFocus:null,
+        strWindow:[3,4,5], strMatch:[3,4,5], strMismatch:[], seqMatch:[1,2,3], seqMismatch:[],
+        action:"So the correct combination is answer e.",
+        check:["A = str[i + j - 1]", "B = j = seqlen + 1"],
+        outcome:["answer e"],
+        status:"The full matching window starts at i = 3, and the loop exits with j one past the end of seq.",
+        code:"A = str[i + j - 1]\nB = j = seqlen + 1\n\nCorrect choice: e",
+        markA:true, markB:true
+      }
+    ];
+
+    let idx = 0, timer = null;
+
+    function renderArray(boxId, arr, opts){
+      const box = document.getElementById(boxId);
+      box.innerHTML = "";
+      for(let i=0;i<arr.length;i++){
+        const pos = i + 1;
+        const wrap = document.createElement("div");
+        wrap.className = "cellWrap";
+        const index = document.createElement("div");
+        index.className = "index";
+        index.textContent = pos;
+        const cell = document.createElement("div");
+        let cls = "cell";
+        if (opts.window && opts.window.includes(pos)) cls += " window";
+        if (opts.match && opts.match.includes(pos)) cls += " match";
+        if (opts.mismatch && opts.mismatch.includes(pos)) cls += " mismatch";
+        if (opts.focus === pos) cls += " focus";
+        cell.className = cls;
+        cell.textContent = arr[i];
+        wrap.appendChild(index);
+        wrap.appendChild(cell);
+        box.appendChild(wrap);
+      }
+    }
+
+    function renderPills(id, arr, typeFn){
+      const el = document.getElementById(id);
+      if (!arr.length){ el.innerHTML = '<span style="color:#93a1c9">—</span>'; return; }
+      el.innerHTML = arr.map(x => {
+        let cls = "pill";
+        if (typeof typeFn === "function") cls += " " + typeFn(x);
+        return `<span class="${cls}">${x}</span>`;
+      }).join("");
+    }
+
+    function render(){
+      const s = states[idx];
+      renderArray("strBox", s.str, {window:s.strWindow, match:s.strMatch, mismatch:s.strMismatch, focus:s.strFocus});
+      renderArray("seqBox", s.seq, {window:[], match:s.seqMatch, mismatch:s.seqMismatch, focus:s.seqFocus});
+
+      renderPills("varBox", [`i = ${s.i}`, `j = ${s.j}`, `len = ${s.len}`, `seqlen = ${s.seqlen}`],
+        x => x.startsWith("i") || x.startsWith("j") ? "focus" : "");
+      renderPills("checkBox", s.check, x => x.includes("wrong") ? "bad" : (x.includes("match") || x.includes("4")) ? "good" : "warn");
+      renderPills("outcomeBox", s.outcome, x => (x.includes("match") || x.includes("true") || x.includes("answer")) ? "good" : (x.includes("mismatch") || x.includes("wrong")) ? "bad" : "warn");
+
+      document.getElementById("actionBox").innerHTML = `<b>${s.action}</b>`;
+      document.getElementById("statusBox").innerHTML = s.status;
+      document.getElementById("codeBox").textContent = s.code;
+      document.getElementById("choiceA").className = "choice" + (s.markA ? " right" : "");
+      document.getElementById("choiceB").className = "choice" + (s.markB ? " right" : "");
+      document.getElementById("rowA").className = s.markA ? "highlight" : "";
+      document.getElementById("rowB").className = s.markB ? "highlight" : "";
+      document.getElementById("prevBtn").disabled = idx === 0;
+      document.getElementById("nextBtn").disabled = idx === states.length - 1;
+    }
+
+    function next(){ if (idx < states.length - 1) { idx++; render(); } }
+    function prev(){ if (idx > 0) { idx--; render(); } }
+    function reset(){ stopAuto(); idx = 0; render(); }
+
+    function autoPlay(){
+      if (timer){ stopAuto(); return; }
+      document.getElementById("autoBtn").textContent = "Pause";
+      timer = setInterval(() => {
+        if (idx >= states.length - 1){ stopAuto(); return; }
+        next();
+      }, 1500);
+    }
+
+    function stopAuto(){
+      clearInterval(timer);
+      timer = null;
+      document.getElementById("autoBtn").textContent = "Auto Play";
+    }
+
+    document.getElementById("nextBtn").addEventListener("click", next);
+    document.getElementById("prevBtn").addEventListener("click", prev);
+    document.getElementById("resetBtn").addEventListener("click", reset);
+    document.getElementById("autoBtn").addEventListener("click", autoPlay);
+    render();
+  </script>
+</body>
+</html>
