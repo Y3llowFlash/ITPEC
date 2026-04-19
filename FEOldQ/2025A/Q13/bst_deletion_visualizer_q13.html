@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BST Deletion Visualizer - Q13</title>
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#151b31; --panel2:#1d2440; --text:#eef2ff; --muted:#aeb8da;
+      --accent:#7c9cff; --good:#4ade80; --warn:#f59e0b; --edge:#7b89b6;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:Inter,system-ui,Segoe UI,Arial,sans-serif; color:var(--text);
+      background:linear-gradient(135deg,#09101d,#141a32 55%,#09101d);
+    }
+    .wrap{max-width:1450px;margin:0 auto;padding:24px}
+    h1{margin:0 0 8px;font-size:clamp(1.7rem,2vw,2.5rem)}
+    .lead{margin:0 0 20px;color:var(--muted);line-height:1.7}
+    .grid{display:grid;grid-template-columns:1.08fr 1fr;gap:20px}
+    .panel{
+      background:rgba(21,27,49,.92); border:1px solid rgba(255,255,255,.08); border-radius:18px;
+      padding:18px; box-shadow:0 12px 28px rgba(0,0,0,.28);
+    }
+    svg{
+      width:100%; height:auto; border-radius:16px; background:linear-gradient(180deg,#121932,#0f1528);
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .edge{stroke:var(--edge); stroke-width:4; stroke-linecap:round;}
+    .edge.trace{stroke:#f8c15d; stroke-width:6}
+    .node{fill:#263154; stroke:#95a4e8; stroke-width:3}
+    .node.root{fill:#2c3a63}
+    .node.target{fill:#4a1f2a; stroke:#fb7185; stroke-width:5}
+    .node.scan{fill:#5b3d12; stroke:#f8c15d; stroke-width:5}
+    .node.replaced{fill:#173c2a; stroke:#4ade80; stroke-width:5}
+    .node.ghost{fill:#0f172a; stroke:#94a3b8; stroke-dasharray:8 6; opacity:.55}
+    .label{fill:white; font-weight:800; font-size:24px; text-anchor:middle; dominant-baseline:middle}
+    .ghostX{stroke:#fb7185; stroke-width:5; stroke-linecap:round}
+    .controls{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+    button{
+      border:none;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer;
+      background:var(--accent);color:white;
+    }
+    button.secondary{background:#334155}
+    button.good{background:#4ade80;color:#08110a}
+    button.warn{background:#f59e0b;color:#241400}
+    button:disabled{opacity:.45;cursor:not-allowed}
+    .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+    .card{
+      background:var(--panel2);border-radius:16px;padding:14px; border:1px solid rgba(255,255,255,.06);min-height:108px;
+    }
+    .card h3{margin:0 0 10px;font-size:1rem;color:#dbe4ff}
+    .pillrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-height:36px}
+    .pill{
+      border-radius:999px;padding:8px 12px;background:#2b3358; border:1px solid rgba(255,255,255,.08);
+      font-weight:700;min-width:48px;text-align:center;
+    }
+    .pill.good{background:#173c2a}
+    .pill.warn{background:#5b3d12}
+    .pill.focus{background:#3b2f6e}
+    .status{
+      margin-top:14px;padding:12px 14px;border-radius:14px;background:#11162a;
+      line-height:1.7;border-left:4px solid var(--accent);color:#e4eaff;
+    }
+    .codebox{
+      margin-top:12px;background:#0d1324;border-radius:14px;padding:14px; border:1px solid rgba(255,255,255,.06);
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; white-space:pre-wrap; line-height:1.68;color:#e3e9ff;
+    }
+    .choiceRow{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+    .choice{
+      padding:10px 12px;border-radius:12px;background:#212947; border:1px solid rgba(255,255,255,.06);font-weight:700;
+    }
+    .choice.right{background:#173c2a;border:1px solid rgba(74,222,128,.35)}
+    .mini{color:var(--muted);margin-top:8px}
+    .footer{margin-top:18px;color:var(--muted);line-height:1.7;font-size:.95rem}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} .cards{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>BST Deletion Visualizer - Q13</h1>
+    <p class="lead">
+      This animation shows exactly why the answer is <b>h</b>:
+      <b>A = node.right</b>, <b>B = node2.left is not undefined</b>, and <b>C = node2.key</b>.
+      It walks through deleting node <b>2</b> from the BST step by step.
+    </p>
+
+    <div class="grid">
+      <div class="panel">
+        <svg viewBox="0 0 760 470" aria-label="BST deletion animation">
+          <line id="e52" class="edge" x1="380" y1="70" x2="250" y2="150"/>
+          <line id="e56" class="edge" x1="380" y1="70" x2="510" y2="150"/>
+          <line id="e21" class="edge" x1="250" y1="150" x2="170" y2="235"/>
+          <line id="e24" class="edge" x1="250" y1="150" x2="330" y2="235"/>
+          <line id="e43" class="edge" x1="330" y1="235" x2="290" y2="320"/>
+          <line id="e67" class="edge" x1="510" y1="150" x2="590" y2="235"/>
+
+          <circle id="n5" class="node root" cx="380" cy="70" r="32"></circle>
+          <circle id="n2" class="node" cx="250" cy="150" r="32"></circle>
+          <circle id="n6" class="node" cx="510" cy="150" r="32"></circle>
+          <circle id="n1" class="node" cx="170" cy="235" r="32"></circle>
+          <circle id="n4" class="node" cx="330" cy="235" r="32"></circle>
+          <circle id="n3" class="node" cx="290" cy="320" r="32"></circle>
+          <circle id="n7" class="node" cx="590" cy="235" r="32"></circle>
+
+          <text id="t5" class="label" x="380" y="70">5</text>
+          <text id="t2" class="label" x="250" y="150">2</text>
+          <text id="t6" class="label" x="510" y="150">6</text>
+          <text id="t1" class="label" x="170" y="235">1</text>
+          <text id="t4" class="label" x="330" y="235">4</text>
+          <text id="t3" class="label" x="290" y="320">3</text>
+          <text id="t7" class="label" x="590" y="235">7</text>
+
+          <line id="x31" class="ghostX" x1="268" y1="298" x2="312" y2="342" style="display:none"/>
+          <line id="x32" class="ghostX" x1="312" y1="298" x2="268" y2="342" style="display:none"/>
+        </svg>
+
+        <div class="controls">
+          <button id="prevBtn" class="secondary">◀ Previous</button>
+          <button id="nextBtn">Next ▶</button>
+          <button id="autoBtn" class="good">Auto Play</button>
+          <button id="resetBtn" class="warn">Reset</button>
+        </div>
+
+        <div class="mini">
+          Teaching tip: say “find node”, then “go right once”, then “go left as far as possible”, then “copy and delete duplicate”.
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="cards">
+          <div class="card">
+            <h3>Current Step</h3>
+            <div id="stepBox" style="line-height:1.65"></div>
+          </div>
+          <div class="card">
+            <h3>Key Variables</h3>
+            <div id="varBox" class="pillrow"></div>
+          </div>
+          <div class="card">
+            <h3>Why This Happens</h3>
+            <div id="whyBox" style="line-height:1.65"></div>
+          </div>
+          <div class="card">
+            <h3>Conclusion</h3>
+            <div id="conclusionBox" class="pillrow"></div>
+          </div>
+        </div>
+
+        <div class="status" id="statusBox"></div>
+        <div class="codebox" id="codeBox"></div>
+
+        <div class="choiceRow">
+          <div class="choice" id="choiceA">A = node.right</div>
+          <div class="choice" id="choiceB">B = node2.left is not undefined</div>
+          <div class="choice" id="choiceC">C = node2.key</div>
+        </div>
+
+        <div class="footer">
+          Final tree after deletion:
+          <br>the old <b>2</b> becomes <b>3</b>
+          <br>the lower duplicate <b>3</b> is removed
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const states = [
+      {
+        title:"Initial BST",
+        vars:["key = 2", "node = 5"],
+        why:"We begin at the root and search for the node whose key is 2.",
+        conclusion:["Search left from 5"],
+        status:"Because 2 < 5, BST search moves into the left subtree.",
+        code:"remove(root, 2)\n2 < 5 → node.left ← remove(node.left, 2)",
+        traceEdges:["e52"], targetNode:null, scanNode:"n5",
+        text2:"2", cross:false, markA:false, markB:false, markC:false
+      },
+      {
+        title:"Found the target node",
+        vars:["node = 2", "key = 2"],
+        why:"Now key equals node.key, so this is the node to delete.",
+        conclusion:["Target node found"],
+        status:"Node 2 has a right child 4, so we cannot just return node.left.",
+        code:"At node 2:\nkey < node.key ? no\nkey > node.key ? no\nnode.right is undefined ? no",
+        traceEdges:[], targetNode:"n2", scanNode:null,
+        text2:"2", cross:false, markA:false, markB:false, markC:false
+      },
+      {
+        title:"Go to the right subtree",
+        vars:["node = 2", "node2 = node.right = 4"],
+        why:"When deleting a BST node that has a right subtree, we find the smallest key in that right subtree.",
+        conclusion:["A = node.right"],
+        status:"That is why blank A must be node.right.",
+        code:"else\n    node2 ← node.right",
+        traceEdges:["e24"], targetNode:"n2", scanNode:"n4",
+        text2:"2", cross:false, markA:true, markB:false, markC:false
+      },
+      {
+        title:"Move left while possible",
+        vars:["node2 = 4", "node2.left = 3"],
+        why:"The smallest value in any BST subtree is found by going left as far as possible.",
+        conclusion:["B checks left child exists"],
+        status:"Because 4 has a left child, the while loop continues.",
+        code:"while (node2.left is not undefined)\n    node2 ← node2.left",
+        traceEdges:["e43"], targetNode:"n2", scanNode:"n4",
+        text2:"2", cross:false, markA:true, markB:true, markC:false
+      },
+      {
+        title:"Reached the minimum node",
+        vars:["node2 = 3", "node2.left = undefined"],
+        why:"There is no more left child, so 3 is the smallest node in the right subtree.",
+        conclusion:["Minimum found = 3"],
+        status:"This proves B = node2.left is not undefined.",
+        code:"node2 becomes 3\nNo left child now → stop loop",
+        traceEdges:[], targetNode:"n2", scanNode:"n3",
+        text2:"2", cross:false, markA:true, markB:true, markC:false
+      },
+      {
+        title:"Copy 3 into the old 2 position",
+        vars:["node.key ← node2.key", "2 becomes 3"],
+        why:"We replace the target node's key by the smallest key from its right subtree.",
+        conclusion:["Upper node changes 2 → 3"],
+        status:"Now there are temporarily two 3s in the tree.",
+        code:"node.key ← node2.key",
+        traceEdges:[], targetNode:null, scanNode:"n3",
+        text2:"3", cross:false, markA:true, markB:true, markC:false
+      },
+      {
+        title:"Remove the duplicate value",
+        vars:["remove(node.right, node2.key)", "remove(4, 3)"],
+        why:"After copying the key upward, we must remove the original lower node that still has that same key.",
+        conclusion:["C = node2.key"],
+        status:"That is why blank C must be node2.key.",
+        code:"node.right ← remove(node.right, node2.key)",
+        traceEdges:["e24","e43"], targetNode:null, scanNode:"n3",
+        text2:"3", cross:false, markA:true, markB:true, markC:true
+      },
+      {
+        title:"Delete the old lower 3",
+        vars:["lower 3 is a leaf"],
+        why:"The lower 3 has no children here, so it is simply removed.",
+        conclusion:["Duplicate gone"],
+        status:"Now the BST is correct again.",
+        code:"remove(4, 3) deletes the leaf node 3",
+        traceEdges:[], targetNode:null, scanNode:null,
+        text2:"3", cross:true, markA:true, markB:true, markC:true
+      },
+      {
+        title:"Final answer",
+        vars:["A = node.right", "B = node2.left is not undefined", "C = node2.key"],
+        why:"This is the standard BST deletion idea using the inorder successor.",
+        conclusion:["Answer h"],
+        status:"So the correct combination is h.",
+        code:"A = node.right\nB = node2.left is not undefined\nC = node2.key\n\nCorrect answer: h",
+        traceEdges:[], targetNode:null, scanNode:null,
+        text2:"3", cross:true, markA:true, markB:true, markC:true
+      }
+    ];
+
+    let idx = 0, timer = null;
+
+    function clearVisuals(){
+      const nodeIds = ["n1","n2","n3","n4","n5","n6","n7"];
+      const edgeIds = ["e52","e56","e21","e24","e43","e67"];
+      nodeIds.forEach(id => {
+        const el = document.getElementById(id);
+        el.classList.remove("target","scan","replaced","ghost");
+        if (id === "n5") el.classList.add("root");
+      });
+      edgeIds.forEach(id => document.getElementById(id).classList.remove("trace"));
+      document.getElementById("x31").style.display = "none";
+      document.getElementById("x32").style.display = "none";
+      document.getElementById("n3").style.opacity = "1";
+      document.getElementById("t3").style.opacity = "1";
+    }
+
+    function renderPills(id, arr, typeFn){
+      const el = document.getElementById(id);
+      if (!arr.length){ el.innerHTML = '<span style="color:#93a1c9">—</span>'; return; }
+      el.innerHTML = arr.map(x => {
+        let cls = "pill";
+        if (typeof typeFn === "function") cls += " " + typeFn(x);
+        return `<span class="${cls}">${x}</span>`;
+      }).join("");
+    }
+
+    function render(){
+      const s = states[idx];
+      clearVisuals();
+
+      document.getElementById("t2").textContent = s.text2;
+
+      (s.traceEdges || []).forEach(id => document.getElementById(id).classList.add("trace"));
+      if (s.targetNode) document.getElementById(s.targetNode).classList.add("target");
+      if (s.scanNode) document.getElementById(s.scanNode).classList.add("scan");
+
+      if (idx >= 5) document.getElementById("n2").classList.add("replaced");
+
+      if (s.cross) {
+        document.getElementById("x31").style.display = "block";
+        document.getElementById("x32").style.display = "block";
+        document.getElementById("n3").classList.add("ghost");
+        document.getElementById("t3").style.opacity = "0.7";
+      }
+
+      document.getElementById("stepBox").innerHTML = `<b>${s.title}</b>`;
+      renderPills("varBox", s.vars, x => x.includes("node2") || x.includes("key") ? "focus" : "warn");
+      document.getElementById("whyBox").innerHTML = s.why;
+      renderPills("conclusionBox", s.conclusion, x => x.includes("Answer") || x.includes("A =") || x.includes("B") || x.includes("C =") ? "good" : "warn");
+      document.getElementById("statusBox").innerHTML = s.status;
+      document.getElementById("codeBox").textContent = s.code;
+
+      document.getElementById("choiceA").className = "choice" + (s.markA ? " right" : "");
+      document.getElementById("choiceB").className = "choice" + (s.markB ? " right" : "");
+      document.getElementById("choiceC").className = "choice" + (s.markC ? " right" : "");
+
+      document.getElementById("prevBtn").disabled = idx === 0;
+      document.getElementById("nextBtn").disabled = idx === states.length - 1;
+    }
+
+    function next(){ if (idx < states.length - 1) { idx++; render(); } }
+    function prev(){ if (idx > 0) { idx--; render(); } }
+    function reset(){ stopAuto(); idx = 0; render(); }
+
+    function autoPlay(){
+      if (timer){ stopAuto(); return; }
+      document.getElementById("autoBtn").textContent = "Pause";
+      timer = setInterval(() => {
+        if (idx >= states.length - 1){ stopAuto(); return; }
+        next();
+      }, 1700);
+    }
+
+    function stopAuto(){
+      clearInterval(timer);
+      timer = null;
+      document.getElementById("autoBtn").textContent = "Auto Play";
+    }
+
+    document.getElementById("nextBtn").addEventListener("click", next);
+    document.getElementById("prevBtn").addEventListener("click", prev);
+    document.getElementById("resetBtn").addEventListener("click", reset);
+    document.getElementById("autoBtn").addEventListener("click", autoPlay);
+    render();
+  </script>
+</body>
+</html>
